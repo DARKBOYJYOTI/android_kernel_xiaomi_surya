@@ -41,8 +41,6 @@ jobs:
           export CROSS_COMPILE=aarch64-linux-gnu-
           export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
           export CC=clang
-          export LLVM=1
-          export LLVM_IAS=1
           
           # 1. Run Defconfig (This will create the out/.config file)
           make O=out surya_defconfig
@@ -53,14 +51,12 @@ jobs:
           # 3. Merge Droidspaces configs with the default config using merge_config.sh
           ARCH=arm64 scripts/kconfig/merge_config.sh -O out out/.config ./droidspaces.config
           
-          # 4. Compile the kernel
+          # 4. Compile the kernel (Without LLVM flags to fix DTB syntax errors)
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
             CC=clang \
             CROSS_COMPILE=aarch64-linux-gnu- \
-            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-            LLVM=1 \
-            LLVM_IAS=1
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 
       - name: Upload Kernel Artifact
         uses: actions/upload-artifact@v4
