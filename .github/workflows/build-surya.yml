@@ -24,10 +24,10 @@ jobs:
           gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
           binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi
 
-    - name: Clone Kernel Source
-      run: |
-        # Use BaikalOS kernel source
-        git clone --depth=1 https://github.com/baikalos/android_kernel_xiaomi_surya.git kernel-source
+      - name: Clone Kernel Source
+        run: |
+          # Use BaikalOS kernel source
+          git clone --depth=1 https://github.com/baikalos/android_kernel_xiaomi_surya.git kernel-source
 
       - name: Apply Droidspaces Patches
         run: |
