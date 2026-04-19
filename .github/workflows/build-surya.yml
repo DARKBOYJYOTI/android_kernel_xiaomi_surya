@@ -26,8 +26,8 @@ jobs:
 
       - name: Clone Kernel Source
         run: |
-          # Use LineageOS kernel - more stable
-          git clone --depth=1 --branch lineage-21 https://github.com/LineageOS/android_kernel_xiaomi_surya.git kernel-source
+          # Use BaikalOS kernel source for better features
+          git clone --depth=1 https://github.com/baikalos/android_kernel_xiaomi_surya.git kernel-source
 
       - name: Apply Droidspaces Patches
         run: |
