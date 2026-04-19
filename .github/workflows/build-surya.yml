@@ -22,8 +22,7 @@ jobs:
           bc libncurses-dev libelf-dev \
           xsltproc unzip \
           gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
-          binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi \
-          clang lld llvm
+          binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi
 
       - name: Clone Kernel Source
         run: |
@@ -33,30 +32,30 @@ jobs:
         run: |
           cd kernel-source
           
-          # Set ARCH
+          # Set ARCH and Compiler to System GCC (Most compatible for 4.14)
           export ARCH=arm64
           export SUBARCH=arm64
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
           
           # 1. Run Defconfig
-          make O=out surya_defconfig ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-
+          make O=out surya_defconfig
           
           # 2. Copy and Merge Droidspaces Config
           cp $GITHUB_WORKSPACE/droidspaces.config ./droidspaces.config
           ARCH=arm64 scripts/kconfig/merge_config.sh -O out out/.config ./droidspaces.config
           
-          # 3. Force default for new configs to prevent hanging
+          # 3. Force default configs (Prevent hanging)
           make O=out ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
           
-          # 4. Compile the kernel 
-          # We use DTC_CPP to force GCC for Device Tree preprocessing, fixing the syntax error
+          # 4. Compile the kernel
+          # Added KCFLAGS=-gdwarf-4 to fix the 'Unrecognized form: 0x22' warnings
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
-            CC=clang \
-            HOSTCC=gcc \
-            HOSTCXX=g++ \
             CROSS_COMPILE=aarch64-linux-gnu- \
             CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-            DTC_CPP=aarch64-linux-gnu-gcc
+            KCFLAGS=-gdwarf-4 \
+            KAFLAGS=-gdwarf-4
 
       - name: Upload Kernel Artifact
         uses: actions/upload-artifact@v4
