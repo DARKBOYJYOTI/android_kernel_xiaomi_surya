@@ -26,13 +26,8 @@ jobs:
 
       - name: Clone Kernel Source
         run: |
-          git clone --depth=1 https://github.com/baikalos/android_kernel_xiaomi_surya.git kernel-source
-
-      - name: Fix DTS Syntax Error
-        run: |
-          cd kernel-source
-          # Create minimal valid dtsi file to replace broken thermal overlay
-          printf '/* Empty thermal overlay placeholder */\n' > arch/arm64/boot/dts/qcom/sdmmagpie-thermal-overlay.dtsi
+          # Use LineageOS kernel - more stable than BaikalOS
+          git clone --depth=1 --branch lineage-21 https://github.com/LineageOS/android_kernel_xiaomi_surya.git kernel-source
 
       - name: Apply Droidspaces Patches
         run: |
