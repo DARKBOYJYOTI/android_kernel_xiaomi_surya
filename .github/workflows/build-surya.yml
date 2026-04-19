@@ -22,11 +22,8 @@ jobs:
           bc libncurses-dev libelf-dev \
           xsltproc unzip \
           gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
-          binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi
-
-      - name: Download Toolchain (Proton Clang)
-        run: |
-          git clone --depth=1 https://github.com/kdrag0n/proton-clang.git toolchain
+          binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi \
+          clang lld llvm
 
       - name: Clone Kernel Source
         run: |
@@ -35,30 +32,33 @@ jobs:
       - name: Apply Droidspaces Config & Compile
         run: |
           cd kernel-source
-          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
           
-          # Set Architecture and Compiler
+          # Set Architecture and System Clang/LLVM Environment
           export ARCH=arm64
           export SUBARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
           export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
           export CC=clang
+          export LLVM=1
+          export LLVM_IAS=1
           
-          # 1. Run Defconfig (This will create the out/.config file)
+          # 1. Run Defconfig
           make O=out surya_defconfig
           
           # 2. Copy your droidspaces.config file to the kernel folder
           cp $GITHUB_WORKSPACE/droidspaces.config ./droidspaces.config
           
-          # 3. Merge Droidspaces configs with the default config using merge_config.sh
+          # 3. Merge configs
           ARCH=arm64 scripts/kconfig/merge_config.sh -O out out/.config ./droidspaces.config
           
-          # 4. Compile the kernel (Bulletproof: Clang for C, GCC for Linking/DTB)
+          # 4. Compile the kernel (Pure System LLVM)
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
             CC=clang \
             CROSS_COMPILE=aarch64-linux-gnu- \
-            CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+            LLVM=1 \
+            LLVM_IAS=1
 
       - name: Upload Kernel Artifact
         uses: actions/upload-artifact@v4
