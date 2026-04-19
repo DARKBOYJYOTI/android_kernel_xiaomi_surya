@@ -20,7 +20,9 @@ jobs:
           squashfs-tools schedtool dpkg-dev liblz4-tool \
           make libssl-dev pwgen \
           bc libncurses-dev libelf-dev \
-          xsltproc unzip
+          xsltproc unzip \
+          gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
+          binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi
 
       - name: Download Toolchain (Proton Clang)
         run: |
@@ -51,7 +53,7 @@ jobs:
           # 3. Merge Droidspaces configs with the default config using merge_config.sh
           ARCH=arm64 scripts/kconfig/merge_config.sh -O out out/.config ./droidspaces.config
           
-          # 4. Compile the kernel (Without LLVM flags to fix DTB syntax errors)
+          # 4. Compile the kernel (Bulletproof: Clang for C, GCC for Linking/DTB)
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
             CC=clang \
