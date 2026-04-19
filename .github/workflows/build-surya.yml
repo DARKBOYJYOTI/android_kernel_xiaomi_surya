@@ -1,0 +1,73 @@
+name: Build Surya Kernel for Droidspaces
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout Work Space
+        uses: actions/checkout@v4
+
+      - name: Setup Build Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git ccache automake flex lzop bison \
+            gperf build-essential zip curl zlib1g-dev g++-multilib \
+            libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev \
+            squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool \
+            make optipng maven libssl-dev pwgen libswitch-perl \
+            policycoreutils minicom libxml-sax-base-perl libxml-simple-perl \
+            bc libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev \
+            libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip
+
+      - name: Download Toolchain (Proton Clang)
+        run: |
+          git clone --depth=1 https://github.com/kdrag0n/proton-clang.git toolchain
+
+      - name: Clone Kernel Source
+        run: |
+          git clone --depth=1 https://github.com/baikalos/android_kernel_xiaomi_surya.git kernel-source
+
+      - name: Apply Droidspaces Config & Compile
+        run: |
+          cd kernel-source
+          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+          
+          # আর্কিটেকচার এবং কম্পাইলার সেট করা
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+          export CC=clang
+          export LLVM=1
+          export LLVM_IAS=1
+          
+          # ১. Defconfig রান করা (এতে out/.config ফাইল তৈরি হবে)
+          make O=out surya_defconfig
+          
+          # ২. আপনার তৈরি করা droidspaces.config ফাইলটি কার্নেল ফোল্ডারে আনা
+          cp $GITHUB_WORKSPACE/droidspaces.config ./droidspaces.config
+          
+          # ৩. merge_config.sh ব্যবহার করে ডিফল্ট কনফিগের সাথে Droidspaces-এর কনফিগগুলো যুক্ত করা
+          ARCH=arm64 scripts/kconfig/merge_config.sh -O out out/.config ./droidspaces.config
+          
+          # ৪. কার্নেল কম্পাইল করা
+          make -j$(nproc --all) O=out \
+            ARCH=arm64 \
+            CC=clang \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+            LLVM=1 \
+            LLVM_IAS=1
+
+      - name: Upload Kernel Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Compiled-Surya-Droidspaces-Kernel
+          path: |
+            kernel-source/out/arch/arm64/boot/Image.gz
+            kernel-source/out/arch/arm64/boot/Image.gz-dtb
+            kernel-source/out/arch/arm64/boot/dtbo.img
