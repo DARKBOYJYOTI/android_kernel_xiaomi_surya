@@ -18,5 +18,8 @@ This is a config repository for building the Xiaomi Surya kernel with Droidspace
 ## Notes
 
 - KCFLAGS="-w -Wno-error" suppresses warnings to prevent build failures from non-fatal warnings
-- Build outputs: `Image.gz`, `Image.gz-dtb`, `dtbo.img` in `out/arch/arm64/boot/`
+- Build target: `Image.gz` only (dtbs skipped due to broken DTS overlay files in both BaikalOS and LineageOS sources)
+- Build output: `out/arch/arm64/boot/Image.gz`
 - Target device: Xiaomi Surya (Poco X3 / Redmi Note 9 Pro)
+- Droidspaces non-GKI patches applied: xt_qtaguid panic fix + cgroup file prefix fix
+- LineageOS source (lineage-21) also tested and works; switch clone URL to try alternate sources
