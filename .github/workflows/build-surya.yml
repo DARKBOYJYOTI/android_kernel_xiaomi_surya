@@ -11,17 +11,16 @@ jobs:
       - name: Checkout Work Space
         uses: actions/checkout@v4
 
-          - name: Setup Build Environment
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git ccache automake flex lzop bison \
-        gperf build-essential zip curl zlib1g-dev g++-multilib \
-        libxml2-utils bzip2 libbz2-dev \
-        squashfs-tools schedtool dpkg-dev liblz4-tool \
-        make libssl-dev pwgen \
-        bc libncurses-dev libelf-dev \
-        xsltproc unzip
-
+      - name: Setup Build Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git ccache automake flex lzop bison \
+          gperf build-essential zip curl zlib1g-dev g++-multilib \
+          libxml2-utils bzip2 libbz2-dev \
+          squashfs-tools schedtool dpkg-dev liblz4-tool \
+          make libssl-dev pwgen \
+          bc libncurses-dev libelf-dev \
+          xsltproc unzip
 
       - name: Download Toolchain (Proton Clang)
         run: |
@@ -36,7 +35,7 @@ jobs:
           cd kernel-source
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
           
-          # আর্কিটেকচার এবং কম্পাইলার সেট করা
+          # Set Architecture and Compiler
           export ARCH=arm64
           export SUBARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
@@ -45,16 +44,16 @@ jobs:
           export LLVM=1
           export LLVM_IAS=1
           
-          # ১. Defconfig রান করা (এতে out/.config ফাইল তৈরি হবে)
+          # 1. Run Defconfig (This will create the out/.config file)
           make O=out surya_defconfig
           
-          # ২. আপনার তৈরি করা droidspaces.config ফাইলটি কার্নেল ফোল্ডারে আনা
+          # 2. Copy your droidspaces.config file to the kernel folder
           cp $GITHUB_WORKSPACE/droidspaces.config ./droidspaces.config
           
-          # ৩. merge_config.sh ব্যবহার করে ডিফল্ট কনফিগের সাথে Droidspaces-এর কনফিগগুলো যুক্ত করা
+          # 3. Merge Droidspaces configs with the default config using merge_config.sh
           ARCH=arm64 scripts/kconfig/merge_config.sh -O out out/.config ./droidspaces.config
           
-          # ৪. কার্নেল কম্পাইল করা
+          # 4. Compile the kernel
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
             CC=clang \
@@ -71,3 +70,4 @@ jobs:
             kernel-source/out/arch/arm64/boot/Image.gz
             kernel-source/out/arch/arm64/boot/Image.gz-dtb
             kernel-source/out/arch/arm64/boot/dtbo.img
+            
