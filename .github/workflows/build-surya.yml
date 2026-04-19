@@ -33,17 +33,12 @@ jobs:
         run: |
           cd kernel-source
           
-          # Set Architecture and System Clang/LLVM Environment
-          export ARCH=arm64
-          export SUBARCH=arm64
-          export CROSS_COMPILE=aarch64-linux-gnu-
-          export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
-          export CC=clang
-          export LLVM=1
-          export LLVM_IAS=1
-          
           # 1. Run Defconfig
-          make O=out surya_defconfig
+          make O=out surya_defconfig \
+            ARCH=arm64 \
+            CC=clang \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi-
           
           # 2. Copy your droidspaces.config file to the kernel folder
           cp $GITHUB_WORKSPACE/droidspaces.config ./droidspaces.config
@@ -51,14 +46,12 @@ jobs:
           # 3. Merge configs
           ARCH=arm64 scripts/kconfig/merge_config.sh -O out out/.config ./droidspaces.config
           
-          # 4. Compile the kernel (Pure System LLVM)
+          # 4. Compile the kernel (Strictly NO LLVM FLAGS this time!)
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
             CC=clang \
             CROSS_COMPILE=aarch64-linux-gnu- \
-            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-            LLVM=1 \
-            LLVM_IAS=1
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 
       - name: Upload Kernel Artifact
         uses: actions/upload-artifact@v4
