@@ -26,8 +26,10 @@ jobs:
 
       - name: Clone Kernel Source
         run: |
-          # Use BaikalOS kernel source for better features
-          git clone --depth=1 https://github.com/baikalos/android_kernel_xiaomi_surya.git kernel-source
+          # Use BaikalOS kernel with vbmeta spoof fix
+          git clone https://github.com/baikalos/android_kernel_xiaomi_surya.git kernel-source
+          cd kernel-source
+          git checkout 0d9f41cd151f3d713ca392d8942938cb7d104623
 
       - name: Apply Droidspaces Patches
         run: |
