@@ -21,6 +21,7 @@ jobs:
           make libssl-dev pwgen \
           bc libncurses-dev libelf-dev \
           xsltproc unzip \
+          clang lld llvm \
           gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
           binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi
 
@@ -51,26 +52,51 @@ jobs:
           export SUBARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
           export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+          export CC=clang
+          export HOSTCC=clang
+          export HOSTCXX=clang++
+          export LLVM=1
+          export LLVM_IAS=1
           export KBUILD_BUILD_USER=darkboyjyoti
           export KBUILD_BUILD_HOST=ubuntu
-           
+            
           # 1. Run Defconfig
-          make O=out surya_defconfig
+          make O=out \
+            CC=clang \
+            HOSTCC=clang \
+            HOSTCXX=clang++ \
+            LLVM=1 \
+            LLVM_IAS=1 \
+            surya_defconfig
           
           # 2. Copy and Merge Droidspaces Config
           cp $GITHUB_WORKSPACE/droidspaces.config ./droidspaces.config
           ARCH=arm64 scripts/kconfig/merge_config.sh -O out out/.config ./droidspaces.config
           
           # 3. Force default configs (Prevent hanging)
-          make O=out ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+          make O=out \
+            ARCH=arm64 \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+            CC=clang \
+            HOSTCC=clang \
+            HOSTCXX=clang++ \
+            LLVM=1 \
+            LLVM_IAS=1 \
+            olddefconfig
           
           # 4. Compile kernel only (skip dtbs to avoid DTS errors)
+          # Keep kernel default optimization policy for a stable release build.
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
             CROSS_COMPILE=aarch64-linux-gnu- \
             CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-            KCFLAGS="-O3 -pipe -gdwarf-4 -w -Wno-error" \
-            KAFLAGS="-gdwarf-4" \
+            CC=clang \
+            HOSTCC=clang \
+            HOSTCXX=clang++ \
+            LLVM=1 \
+            LLVM_IAS=1 \
+            KCFLAGS="-Wno-error" \
             Image.gz
           
           # 5. Try to build dtbo.img separately (may fail, that's ok)
