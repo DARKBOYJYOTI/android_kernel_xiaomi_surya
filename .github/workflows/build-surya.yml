@@ -27,22 +27,20 @@ jobs:
 
       - name: Clone Kernel Source
         run: |
-          # Use latest BaikalOS kernel source
-          git clone https://github.com/baikalos/android_kernel_xiaomi_surya.git kernel-source
-          cd kernel-source
-          git checkout 30aacf8c9c90fb00956d693e4bb1aed110176f7c
+          # Use latest BaikalOS kernel source HEAD
+          git clone --depth=1 https://github.com/baikalos/android_kernel_xiaomi_surya.git kernel-source
+          git -C kernel-source rev-parse HEAD > baikal-source-commit.txt
 
       - name: Apply Droidspaces Patches
         run: |
           cd kernel-source
-          
-          # Patch 1: Fix kernel panic in xt_qtaguid
-          curl -sL https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/main/Documentation/resources/kernel-patches/non-GKI/01.fix_kernel_panic_in_xt_qtaguid.patch -o patch1.patch
-          git apply patch1.patch || echo "Patch 1 may already be applied or conflicted"
-          
-          # Patch 2: Fix cgroup file prefix handling
-          curl -sL "https://raw.githubusercontent.com/ravindu644/Droidspaces-OSS/main/Documentation/resources/kernel-patches/non-GKI/02.fix_restore%20cgroup%20file%20prefix%20handling%20.patch" -o patch2.patch
-          git apply patch2.patch || echo "Patch 2 may already be applied or conflicted"
+
+          # Fail fast if a required Droidspaces patch no longer applies.
+          git apply --check "$GITHUB_WORKSPACE/patches/01.fix_kernel_panic_in_xt_qtaguid.patch"
+          git apply "$GITHUB_WORKSPACE/patches/01.fix_kernel_panic_in_xt_qtaguid.patch"
+
+          git apply --check "$GITHUB_WORKSPACE/patches/02.fix_restore_cgroup_file_prefix_handling.patch"
+          git apply "$GITHUB_WORKSPACE/patches/02.fix_restore_cgroup_file_prefix_handling.patch"
 
       - name: Apply Droidspaces Config & Compile
         run: |
@@ -84,8 +82,27 @@ jobs:
             LLVM=1 \
             LLVM_IAS=1 \
             olddefconfig
-          
-          # 4. Compile kernel only (skip dtbs to avoid DTS errors)
+
+          # 4. Verify VINTF-sensitive and Droidspaces-critical config results.
+          grep -q '^# CONFIG_SYSVIPC is not set$' out/.config
+          grep -q '^CONFIG_POSIX_MQUEUE=y$' out/.config
+          grep -q '^CONFIG_PID_NS=y$' out/.config
+          grep -q '^CONFIG_IPC_NS=y$' out/.config
+          grep -q '^CONFIG_DEVTMPFS=y$' out/.config
+          grep -q '^CONFIG_CGROUP_DEVICE=y$' out/.config
+          grep -q '^CONFIG_CGROUP_PIDS=y$' out/.config
+          grep -q '^CONFIG_FAIR_GROUP_SCHED=y$' out/.config
+          grep -q '^CONFIG_CGROUP_NET_PRIO=y$' out/.config
+          grep -q '^CONFIG_BRIDGE_NETFILTER=y$' out/.config
+          grep -q '^CONFIG_NF_TABLES=y$' out/.config
+          grep -q '^CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y$' out/.config
+          grep -q '^CONFIG_NF_CONNTRACK_NETLINK=y$' out/.config
+          grep -q '^CONFIG_IP_SET=y$' out/.config
+          grep -q '^CONFIG_NETFILTER_NETLINK_QUEUE=y$' out/.config
+          grep -q '^CONFIG_NETFILTER_NETLINK_LOG=y$' out/.config
+          grep -q '^CONFIG_NETFILTER_XT_TARGET_NFLOG=y$' out/.config
+
+          # 5. Compile kernel only (skip dtbs to avoid DTS errors)
           # Keep kernel default optimization policy for a stable release build.
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
@@ -98,8 +115,10 @@ jobs:
             LLVM_IAS=1 \
             KCFLAGS="-Wno-error" \
             Image.gz
-          
-          # 5. Try to build dtbo.img separately (may fail, that's ok)
+
+          cp out/.config "$GITHUB_WORKSPACE/final-surya.config"
+
+          # 6. Try to stage dtbo.img separately if source already provides one.
           # Use prebuilt device tree if available
           if [ -f arch/arm64/boot/dtbo.img ]; then
             cp arch/arm64/boot/dtbo.img out/arch/arm64/boot/ 2>/dev/null || true
@@ -111,4 +130,6 @@ jobs:
           name: Surya-Final-Droidspaces-Kernel
           path: |
             kernel-source/out/arch/arm64/boot/Image.gz
+            final-surya.config
+            baikal-source-commit.txt
             
