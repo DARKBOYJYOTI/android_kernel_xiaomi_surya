@@ -44,8 +44,9 @@ jobs:
           fi
 
           if [ -f kernel/cgroup/cgroup.c ]; then
-            git apply --check "$GITHUB_WORKSPACE/patches/02.fix_restore_cgroup_file_prefix_handling.patch"
-            git apply "$GITHUB_WORKSPACE/patches/02.fix_restore_cgroup_file_prefix_handling.patch"
+            if ! grep -q 'CGRP_ROOT_NOPREFIX' kernel/cgroup/cgroup.c; then
+              perl -0pi -e 's@\n\treturn 0;@\n\n\tif (cft->ss && (cgrp->root->flags & CGRP_ROOT_NOPREFIX) && !(cft->flags & CFTYPE_NO_PREFIX)) {\n\t\tsnprintf(name, CGROUP_FILE_NAME_MAX, "%s.%s", cft->ss->name, cft->name);\n\t\tkernfs_create_link(cgrp->kn, name, kn);\n\t}\n\n\treturn 0;@' kernel/cgroup/cgroup.c
+            fi
           else
             printf '%s\n' 'Skipping cgroup prefix patch: file not present in current source tree'
           fi
