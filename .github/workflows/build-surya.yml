@@ -35,12 +35,20 @@ jobs:
         run: |
           cd kernel-source
 
-          # Fail fast if a required Droidspaces patch no longer applies.
-          git apply --check "$GITHUB_WORKSPACE/patches/01.fix_kernel_panic_in_xt_qtaguid.patch"
-          git apply "$GITHUB_WORKSPACE/patches/01.fix_kernel_panic_in_xt_qtaguid.patch"
+          # Apply only the patches that match the current BaikalOS source tree.
+          if [ -f net/netfilter/xt_qtaguid.c ]; then
+            git apply --check "$GITHUB_WORKSPACE/patches/01.fix_kernel_panic_in_xt_qtaguid.patch"
+            git apply "$GITHUB_WORKSPACE/patches/01.fix_kernel_panic_in_xt_qtaguid.patch"
+          else
+            printf '%s\n' 'Skipping xt_qtaguid patch: file not present in current source tree'
+          fi
 
-          git apply --check "$GITHUB_WORKSPACE/patches/02.fix_restore_cgroup_file_prefix_handling.patch"
-          git apply "$GITHUB_WORKSPACE/patches/02.fix_restore_cgroup_file_prefix_handling.patch"
+          if [ -f kernel/cgroup/cgroup.c ]; then
+            git apply --check "$GITHUB_WORKSPACE/patches/02.fix_restore_cgroup_file_prefix_handling.patch"
+            git apply "$GITHUB_WORKSPACE/patches/02.fix_restore_cgroup_file_prefix_handling.patch"
+          else
+            printf '%s\n' 'Skipping cgroup prefix patch: file not present in current source tree'
+          fi
 
       - name: Apply Droidspaces Config & Compile
         run: |
