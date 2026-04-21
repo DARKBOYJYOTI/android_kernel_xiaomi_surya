@@ -27,8 +27,10 @@ jobs:
 
       - name: Clone Kernel Source
         run: |
-          # Use latest BaikalOS kernel source HEAD
+          # Use the known cooler/stable BaikalOS source commit.
           git clone --depth=1 https://github.com/baikalos/android_kernel_xiaomi_surya.git kernel-source
+          git -C kernel-source fetch --depth=1 origin 0d9f41cd151f3d713ca392d8942938cb7d104623
+          git -C kernel-source checkout --detach FETCH_HEAD
           git -C kernel-source rev-parse HEAD > baikal-source-commit.txt
 
       - name: Apply Droidspaces Patches
