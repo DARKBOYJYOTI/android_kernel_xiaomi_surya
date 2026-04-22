@@ -92,6 +92,13 @@ jobs:
           # 2. Copy and Merge Droidspaces Config
           cp $GITHUB_WORKSPACE/droidspaces.config ./droidspaces.config
           ARCH=arm64 scripts/kconfig/merge_config.sh -O out out/.config ./droidspaces.config
+
+          # Disable debug info to keep the image leaner.
+          scripts/config --file out/.config \
+            -d DEBUG_INFO \
+            -d DEBUG_INFO_REDUCED \
+            -d DEBUG_INFO_SPLIT \
+            -d GDB_SCRIPTS
           
           # 3. Force default configs (Prevent hanging)
           make O=out \
