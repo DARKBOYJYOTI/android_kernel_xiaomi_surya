@@ -29,12 +29,6 @@ jobs:
         run: |
           sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
           sudo update-alternatives --install /usr/bin/lld lld /usr/bin/lld-18 100
-          sudo update-alternatives --install /usr/bin/ld.lld ld.lld /usr/bin/ld.lld-18 100
-          sudo update-alternatives --install /usr/bin/llvm-strip llvm-strip /usr/bin/llvm-strip-18 100
-          sudo update-alternatives --install /usr/bin/llvm-ar llvm-ar /usr/bin/llvm-ar-18 100
-          sudo update-alternatives --install /usr/bin/llvm-nm llvm-nm /usr/bin/llvm-nm-18 100
-          sudo update-alternatives --install /usr/bin/llvm-objcopy llvm-objcopy /usr/bin/llvm-objcopy-18 100
-          sudo update-alternatives --install /usr/bin/llvm-objdump llvm-objdump /usr/bin/llvm-objdump-18 100
 
       - name: Clone Kernel Source
         run: |
@@ -123,7 +117,7 @@ jobs:
           grep -q '^CONFIG_NETFILTER_NETLINK_LOG=y$' out/.config
           grep -q '^CONFIG_NETFILTER_XT_TARGET_NFLOG=y$' out/.config
 
-          # 5. Compile kernel with Clang 18, Thin LTO for optimized stable boot
+          # 5. Compile kernel with Clang 18
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
             CROSS_COMPILE=aarch64-linux-gnu- \
@@ -133,14 +127,6 @@ jobs:
             HOSTCXX=clang++ \
             LLVM=1 \
             LLVM_IAS=1 \
-            KCFLAGS="-Wno-error" \
-            LD=ld.lld \
-            AR=llvm-ar \
-            NM=llvm-nm \
-            OBJCOPY=llvm-objcopy \
-            OBJDUMP=llvm-objdump \
-            STRIP=llvm-strip \
-            LTO=full \
             Image.gz
 
           cp out/.config "$GITHUB_WORKSPACE/final-surya.config"
