@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout Work Space
@@ -21,9 +21,16 @@ jobs:
           make libssl-dev pwgen \
           bc libncurses-dev libelf-dev \
           xsltproc unzip \
-          clang lld llvm \
+          clang-18 lld-18 llvm-18 python3 \
           gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
           binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi
+
+      - name: Setup Clang 18 as default
+        run: |
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
+          sudo update-alternatives --install /usr/bin/lld lld /usr/bin/lld-18 100
+          sudo update-alternatives --install /usr/bin/ld.lld ld.lld /usr/bin/ld.lld-18 100
+          sudo update-alternatives --install /usr/bin/llvm-strip llvm-strip /usr/bin/llvm-strip-18 100
 
       - name: Clone Kernel Source
         run: |
@@ -112,7 +119,7 @@ jobs:
           grep -q '^CONFIG_NETFILTER_NETLINK_LOG=y$' out/.config
           grep -q '^CONFIG_NETFILTER_XT_TARGET_NFLOG=y$' out/.config
 
-          # 5. Compile kernel only (skip dtbs to avoid DTS errors)
+          # 5. Compile kernel with Clang 18, no LTO for boot stability
           # Keep kernel default optimization policy for a stable release build.
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
