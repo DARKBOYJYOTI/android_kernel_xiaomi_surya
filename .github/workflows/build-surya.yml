@@ -140,7 +140,7 @@ jobs:
             OBJCOPY=llvm-objcopy \
             OBJDUMP=llvm-objdump \
             STRIP=llvm-strip \
-            LTO=thin \
+            LTO=full \
             Image.gz
 
           cp out/.config "$GITHUB_WORKSPACE/final-surya.config"
