@@ -21,7 +21,7 @@ jobs:
           make libssl-dev pwgen \
           bc libncurses-dev libelf-dev \
           xsltproc unzip \
-          clang-18 lld-18 llvm-18 python3 \
+          clang-18 llvm-18 llvm-18-tools python3 \
           gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
           binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi
 
@@ -31,6 +31,10 @@ jobs:
           sudo update-alternatives --install /usr/bin/lld lld /usr/bin/lld-18 100
           sudo update-alternatives --install /usr/bin/ld.lld ld.lld /usr/bin/ld.lld-18 100
           sudo update-alternatives --install /usr/bin/llvm-strip llvm-strip /usr/bin/llvm-strip-18 100
+          sudo update-alternatives --install /usr/bin/llvm-ar llvm-ar /usr/bin/llvm-ar-18 100
+          sudo update-alternatives --install /usr/bin/llvm-nm llvm-nm /usr/bin/llvm-nm-18 100
+          sudo update-alternatives --install /usr/bin/llvm-objcopy llvm-objcopy /usr/bin/llvm-objcopy-18 100
+          sudo update-alternatives --install /usr/bin/llvm-objdump llvm-objdump /usr/bin/llvm-objdump-18 100
 
       - name: Clone Kernel Source
         run: |
