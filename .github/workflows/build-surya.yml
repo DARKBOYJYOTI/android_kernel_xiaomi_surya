@@ -113,7 +113,7 @@ jobs:
             olddefconfig
 
           # 4. Verify VINTF-sensitive and Droidspaces-critical config results.
-          grep -q '^CONFIG_SYSVIPC=y$' out/.config
+          grep -q '^# CONFIG_SYSVIPC is not set$' out/.config
           grep -q '^CONFIG_POSIX_MQUEUE=y$' out/.config
           grep -q '^CONFIG_PID_NS=y$' out/.config
           grep -q '^CONFIG_IPC_NS=y$' out/.config
