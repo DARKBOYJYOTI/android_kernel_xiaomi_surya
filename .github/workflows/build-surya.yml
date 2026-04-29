@@ -113,7 +113,7 @@ jobs:
             olddefconfig
 
           # 4. Verify VINTF-sensitive and Droidspaces-critical config results.
-          grep -q '^# CONFIG_SYSVIPC is not set$' out/.config
+          grep -q '^CONFIG_SYSVIPC=y$' out/.config
           grep -q '^CONFIG_POSIX_MQUEUE=y$' out/.config
           grep -q '^CONFIG_PID_NS=y$' out/.config
           grep -q '^CONFIG_IPC_NS=y$' out/.config
@@ -129,6 +129,10 @@ jobs:
           grep -q '^CONFIG_NETFILTER_NETLINK_QUEUE=y$' out/.config
           grep -q '^CONFIG_NETFILTER_NETLINK_LOG=y$' out/.config
           grep -q '^CONFIG_NETFILTER_XT_TARGET_NFLOG=y$' out/.config
+          grep -q '^CONFIG_USER_NS=y$' out/.config
+          grep -q '^CONFIG_OVERLAY_FS=y$' out/.config
+          grep -q '^CONFIG_NET_NS=y$' out/.config
+          grep -q '^CONFIG_EXT4_FS=y$' out/.config
 
           # 5. Compile kernel with Clang 18
           make -j$(nproc --all) O=out \
